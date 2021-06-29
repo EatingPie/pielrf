@@ -10,7 +10,6 @@
 
 	For use to find non-ascii characters in a file you expected
 	to be pure ascii.
-
 """
 
 import string
