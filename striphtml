@@ -17,7 +17,7 @@
 		    results, so stripping it first allows the user to edit
 			any undesirable results.
 
-	CAVEAT
+	CAVEATS
 
 		Not meant for serious web-pages!
 		Used primarily with HTML Files produced by ConvertLit
