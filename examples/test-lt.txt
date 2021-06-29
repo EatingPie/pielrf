@@ -1,0 +1,55 @@
+<chapter>Test
+
+	This is a single paragraph with some
+carriage returns and some other stuff, but
+
+no less than signs.
+	<i>This is an italicized paragraph and</i>
+no other less than signs.
+<justified>
+	This is the test the<i> <b>bold italcs</b> </i>to read.
+<center>
+	&lt;&lt;&lt;THREE LT, 2 GT.&gt;&gt;
+</center>
+	x&lt;&lt;&lt;THREE LT, 2 GT.&gt;&gt;
+</justified>                                             
+	&lt;NO NO STOP STOP STOP!!&gt; she screamed. <<Really1!>>
+<<Really2>>!!
+	&lt;&lt;LEAVE ME!!&gt;&gt;
+	
+	
+	A new paragraph with &lt;&lt;LEAVE ME!!&gt;&gt;
+
+	When Mr and Mrs Dursley woke up on the dull, grey Tuesday our story starts, there was nothing about the cloudy sky outside to suggest that strange and mysterious things would soon be happening all over the country. Mr Dursley hummed as he picked out his most boring tie for work and Mrs Dursley gossiped away happily as she wrestled a screaming Dudley into his high chair.
+	When nobody noticed...
+<justified>
+<blockquote>
+	1 None of them noticed a large tawny owl flutter past the window.
+<blockquote>
+	2 None of them noticed a large tawny owl flutter past the window.
+<verse>
+	When Mr and Mrs Dursley woke up on the dull, grey Tuesday our story starts, there was nothing about the cloudy sky outside to suggest that strange and mysterious things would soon be happening all over the country.
+</verse>
+<blockquote>
+	3 None of them noticed a large tawny owl flutter past the window.
+<blockquote>
+	4 None of them noticed a large tawny owl flutter past the window.
+</blockquote>
+</blockquote>
+	2 But indeed I noticed!
+</blockquote>
+</blockquote>
+</justified>
+<justified>
+	When Mr and Mrs Dursley woke up on the dull, grey Tuesday our story starts, there was nothing about the cloudy sky outside to suggest that strange and mysterious things would soon be happening all over the country. Mr Dursley hummed as he picked out his most boring tie for work and Mrs Dursley gossiped away happily as she wrestled a screaming Dudley into his high chair.
+</justified>
+<verse>
+	When Mr and Mrs Dursley woke up on the dull, grey Tuesday our story starts, there was nothing about the cloudy sky outside to suggest that strange and mysterious things would soon be happening all over the country.
+</verse>
+	Mr Dursley hummed as he picked out his most boring tie for work and Mrs Dursley gossiped away happily as she wrestled a screaming Dudley into his high chair.
+	None of them noticed a large tawny owl flutter past the window.
+
+<br>
+<center>
+	###
+</center>

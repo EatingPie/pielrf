@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+"""
+	Program: asciicheck
+
+	Author: EatingPie <pie@storybytes.com>
+
+	Checks input file to verify that it's valid ascii, and does
+	NOT contain any unicode or out-of-range characters.
+	Prints location in the file of bad characters (line/character).
+
+	For use to find non-ascii characters in a file you expected
+	to be pure ascii.
+
+"""
+
+import string
+import os
+from   sys		import *
+from   optparse	import OptionParser
+
+ASCIICHECK_VERSION = "1.0"
+
+#############################################################
+# def parse_cmdline():										#
+#															#
+#############################################################
+def parse_cmdline():
+
+	cmdline = OptionParser(usage="usage: %prog -i infile")
+
+	cmdline.add_option("-i", "--infile", dest="infile",
+					   action="store",   type="string",
+					   help="Input text file to check for unicode")
+
+	cmdline.add_option("-v", "--version", dest="version", default=False,
+					   action="store_true",
+					   help="Print version number")
+
+	(options, args) = cmdline.parse_args()
+
+	#
+	# Arg Checking is handled here.
+	#
+	if options.version :
+		cmdline.print_help()
+		print "asciicheck version: ", ASCIICHECK_VERSION
+		return None
+	#endif
+
+	infile  = options.infile
+
+	if infile == None:
+		cmdline.print_help()
+		print "Must specify Input File"
+		return None
+	#endif
+
+	if not os.path.exists(infile) :
+		cmdline.print_help()
+		print "Input File \"", infile, "\" does not exist"
+		return None
+	#endif
+
+	return options
+
+#enddef
+
+
+#############################################################
+# def asciicheck():											#
+#															#
+#############################################################
+def asciicheck():
+
+	cmdopts = parse_cmdline()
+	if not cmdopts :
+		return
+
+	# Locals
+	infile          = cmdopts.infile
+
+	print infile
+
+	#
+	# Read whole file in all at once
+	#
+	f    = open(infile, 'rb')
+	data = f.read()
+	f.close()
+
+	line     = 1
+	ccnt     = 1
+	allclear = True
+	for c in data :
+
+		if c == '\n' :
+			line += 1
+			ccnt  = 1
+		#endif
+
+		if ord(c) >= 128 :
+			allclear = False
+			print "Out of range at line",line, "character", ccnt
+		#endif
+
+		ccnt += 1
+
+	#endfor
+
+	if allclear :
+		print "All Clear."
+
+# enddef asciicheck()
+
+if __name__ == "__main__":
+	asciicheck()

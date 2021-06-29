@@ -1,0 +1,166 @@
+Program: pielrf
+
+Support: striphtml and asciicheck
+
+Author: EatingPie <pie@storybytes.com>
+        Special Thanks to Lee Bigelow for Unicode and .pielrfrf support
+
+    Creates a Sony Reader/Librie lrf file from a text file.
+    Includes easy table of contents, chapterization and curly quotes.
+
+
+    *striphtml* removes any HTML tags that pielrf does not understand.
+    It's exactly the same as providing the "--strip-html" flag to
+    pielrf, but creating a seperate stripped file makes it a little
+    easier to add <chapter> tags if there's a lot of funky HTML in
+    the original.
+
+    *striphtml* was mainly designed for use with ConvertLit output HTML.
+
+    *asciicheck* scans your file and reports any characters that are
+    not strict ascii.  While pielrf supports unicode, some ascii files
+    have invalid characters in them, causing pielrf to THINK they're
+    unicode.  If you know you have an ascii file, and pielrf thinks
+    it's unicode, you can run asciicheck to find the bad characters.
+    
+INSTALLATION
+
+	(1) Make sure you've got Python 2.5
+		% python --version
+		Python 2.5
+
+	(2) Install Python 2.5 if necessary
+
+		<http://www.python.org/download>
+
+	(3) Install pielrf and packages (from the pielrf directory)
+
+	    % python setup.py install
+
+		This automatically installs (or gives instructions)
+		the pylrs-1.0.0 and ElementTree packages, as well as
+		pielrf.
+
+QUICKSTART
+
+    pielrf -i infile.txt -o outfile.lrf -t "Book Title" -a "Author Name"
+
+    This will generate a basic LRF file, with a single "Table of Contents"
+    entry, flowed paragraphs, curly-quotes and page headers.  Sweet!
+
+QUICKSTART II
+
+    If you want a Table of Contents and Chapters, it takes just ONE WORD(!!)
+    in your book's text file!
+
+        <chapter>
+
+    If your book is like this...
+
+        Chapter One
+            Some Text
+            ...
+        Chapter Two
+            Some More Text
+
+    Just do this...
+
+        <chapter>Chapter One
+            Some Text
+            ...
+        <chapter>Chapter Two
+            Some More Text
+
+    Both chapters are added to the Reader's Table of Contents, as well
+    as a "Table of Contents" page.  "Chapter One" and "Chapter Two"
+    are also made headers for their respective chapters.  Very nice!
+
+HTML FOR TYPOGRAPHY
+
+    You can control typography for such things as Bold and Italics by
+    using standard HTML tags in your text.
+
+    Recognized Tags
+
+		NON-HTML (pielrf specific)
+
+		<JUSTIFIED></JUSTIFIED>   - JUSTIFIED TEXT - NO FIRST LINE INDENT
+		<VERSE></VERSE>           - POETIC VERSE, REVERSE INDENT
+
+		HTML
+
+        <CENTER></CENTER>         - CENTERED TEXT
+        <BLOCKQUOTE></BLOCKQUOTE> - LEFT/RIGHT INDENTED BLOCK OF TEXT
+        <I></I>                   - ITALICS
+        <B></B>                   - BOLD
+        <SUB></SUB>               - SUBSCRIPT
+        <SUP></SUP>               - SUPERSCRIPT
+        <BR>                      - LINE BREAK (Vertical Whitespace)
+        <H1></H1>
+        <H2></H2>
+        <H3></H3>                 - Heading (bold+large font), strength 1-3
+
+    These are the only HTML tags recognized (beside <P></P> for
+    paragraphs).
+
+    pielrf also supports 100% of the HTML Ampersand flags for special
+    typographic symbols (the ISO Latin set).  A few examples (of
+    the 200 or so!):
+
+        &pound;        - The English Pound Symbol.
+        &mdash;        - An Em-Dash.
+        &iexcl;        - Inverted exclamation mark.
+        &copy;         - the copyright symbol.
+        etc.
+        etc.
+        etc.
+        etc. (No, really, there's a lot of these things!)
+
+FEATURES
+
+	* Top-of-Page Headers, similar to books dowloaded from Sony's Connect Store
+    * Table of Contents and Chapterization if you use the <chapter> tag.
+    * Curly (typographic) quotes.
+    * Paragraph auto-flow.
+    * Double or triple dashes are converted to em-dashes
+    * Understands HTML tags <i></i>, <b></b> <center></center>,
+      <sub></sub>, <sup></sup>, <p></p>.
+    * Understands ALL HTML Ampersand tags - &amp;, &pound, &uumlat, etc.
+    * Paragraphs can be delimited by tabs, spaces, vertical whitespace.
+    * Font size / weight (bold) can be controlled from command line.
+    * Heck, you can control ALL the options from the command line too!
+	* You can SAVE all your options by specifying the --write-rc switch
+
+OPTION OVERLOAD
+
+    You can control just about every option regarding layout.  But don't
+    get overwhelmed.  The defaults should work just fine.  All you need to
+    provide are the input and output files, and a title and author.  To
+    see the options just type:
+
+        pielrf -h
+
+ISSUES
+
+    (1) Indentation must be consistent.  If you paragarph-indent
+        using a tab, all paragraphs must use a tab or they will
+        be lumped together with the previous paragraph.
+
+    (2) Vertical Whitespace REQUIRES a <BR> tag.  This isn't really a
+        bug.
+
+THANKS
+
+	Thanks to Lee Bigelow for his contribution to unicode support,
+	as well as .pielrfrc functionality.
+
+    Thanks to Fallstaff for pylrs-1.0.0, and the makers of the
+	ElementTree library.  Without their work, pielrf would not have
+	been possible.
+
+	pylrs-1.0.0
+        <http://www.falstaffshouse.com>
+        <http://www.mobileread.com/forums/showthread.php?t=9768>
+
+	ElementTree 1.2.6
+	    <http://effbot.org/zone/element-index.htm>

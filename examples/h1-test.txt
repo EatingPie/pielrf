@@ -1,0 +1,35 @@
+<chapter>The Golden Man - UNCENTERED
+
+	"Is it always hot like this?" the salesman demanded. He addressed everybody at the lunch counter and in the shabby booths against the wall. A middle-aged fat man with a good-natured smile, rumpled gray suit, sweat-stained white shirt, a drooping bowtie, and a Panama hat.
+<h1>
+	header1
+</h1>
+	"Only in the summer," the waitress answered.
+<h2>
+	 header2
+</h2>
+	None of the others stirred. The teen-age boy and girl in one of the booths, eyes fixed intently on each other. Two workmen, sleeves rolled up, arms dark and hairy, eating bean soup and rolls. A lean, weathered farmer. An elderly businessman in a blue-serge suit, vest and pocket watch. A dark rat-faced cab driver drinking coffee. A tired woman who had come in to get off her feet and put down her bundles.
+<h3><i>  header3</i> </h3>
+The salesman got out <sub>a package of cigarettes. He</sub> glanced curiously around the dingy cafe, lit up, leaned his arms on the counter, and said to the man next to him: "What's the name of this town?"
+	"Is it always hot like this?" the salesman demanded. He addressed everybody at the lunch counter and in the shabby booths against the wall. A middle-aged fat man with a good-natured smile, rumpled gray suit, sweat-stained white shirt, a drooping bowtie, and a Panama hat.
+
+<chapter>The Golden Man - Centered
+
+<center>
+<h1>
+	header1 Centered
+</h1>
+	"Only in the summer," the waitress answered.
+<h2>
+  header2  Centered
+</h2>
+	None of the others stirred. The teen-age boy and girl in one of the booths, eyes fixed intently on each other. Two workmen, sleeves rolled up, arms dark and hairy, eating bean soup and rolls. A lean, weathered farmer. An elderly businessman in a blue-serge suit, vest and pocket watch. A dark rat-faced cab driver drinking coffee. A tired woman who had come in to get off her feet and put down her bundles.
+<h3>  header3 </h3>
+</center>
+	The salesman got out a package of cigarettes. He glanced curiously around the dingy cafe, lit up, leaned his arms on the counter, and said to the man next to him: "What's the name of this town?"
+
+<center>
+<h1>
+###
+</h1>
+</center>

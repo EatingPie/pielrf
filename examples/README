@@ -1,0 +1,13 @@
+These examples demonstrate formatting usage and a few common command
+line options for pielrf.
+
+pielrf -i wwi.txt -o wwi.lrf \
+       -t "StoryBytes Collected Stories: World War I" -a "M. Stanley Bubien" \
+       --headerstyle=chapter
+
+pielrf -i basic-test.txt -o basic-test.lrf \
+       -t "Basic Test" -a "EatingPie" -b tab
+
+pielrf -i crazy-test.txt -o crazy-test.lrf -t "Crazy Test" -a "EatingPie"
+
+pielrf -i h1-test.txt -o h1-test.lrf -t "H1 Tag Test" -a "EatingPie"

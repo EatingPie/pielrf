@@ -1,0 +1,153 @@
+#!/usr/bin/env python
+"""
+	Program: striphtml
+
+	Author: EatingPie <pie@storybytes.com>
+
+	Strips out HTML that pielrf does not understand.  LEAVES IN HTML THAT
+	PIELRF DOES UNDERSTAND!
+
+	This is equivalent to supplying the "--strip-html" option to pielrf,
+	but allows is provided for two reasons:
+
+		(1) If html is complex, running this program first to strip makes
+		    editing the new file easier (ie adding <chapter> tags).
+
+		(2) Using "--strip-html" in pielrf may not produce the desired
+		    results, so stripping it first allows the user to edit
+			any undesirable results.
+
+	CAVEAT
+
+		Not meant for serious web-pages!
+		Used primarily with HTML Files produced by ConvertLit
+
+"""
+
+from pylrs.pylrs			import *
+from pielrf.chapterbook		import *
+from pielrf.textconvert		import *
+
+from sys					import *
+from optparse				import OptionParser
+import os
+import re
+
+
+#############################################################
+# def parse_cmdline():										#
+#															#
+#############################################################
+def parse_cmdline():
+
+	cmdline = OptionParser(usage="usage: %prog -i infile")
+
+	cmdline.add_option("-i", "--infile", dest="infile",
+					   action="store",   type="string",
+					   help="Input html file to strip")
+	cmdline.add_option("-o", "--outfile", dest="outfile",
+					   action="store",   type="string",
+					   help="Output text file, stripped!")
+	cmdline.add_option("--ptotab", "--paragraph-to-tab", dest="ptotab",
+					   default=False,
+					   action="store_true",
+					   help="Convert <p> tags to [tab] characters")
+	cmdline.add_option("--atochapter", "--chapterize", "--name-to-chapter",
+					   dest="chapterize",
+					   default=False,
+					   action="store_true",
+					   help="Convert <a NAME=\"\"></a> tags to <chapter>")
+	cmdline.add_option("--stripnbsp", dest="stripnbsp",
+					   default=False,
+					   action="store_true",
+					   help="Convert &nbsp; tags to [space] characters")
+
+	(options, args) = cmdline.parse_args()
+
+	infile  = options.infile
+	outfile = options.outfile
+
+	if infile == None:
+		cmdline.print_help()
+		print "Must specify Input File"
+		return None
+	#endif
+	if outfile == None:
+		cmdline.print_help()
+		print "Must specify Output File"
+		return None
+	#endif
+	if not os.path.exists(infile) :
+		cmdline.print_help()
+		print "Input File \"", infile, "\" does not exist"
+		return None
+	#endif
+
+	if infile == outfile :
+		cmdline.print_help()
+		print "Input and Output files were the same: \""+infile+"\""
+		return None
+	#endif
+
+	return options
+
+#enddef parse_cmdline
+
+
+#############################################################
+# def striphtml():											#
+#############################################################
+def striphtml():
+
+	cmdopts = parse_cmdline()
+	if not cmdopts :
+		return
+
+	# Locals
+	infile    = cmdopts.infile
+	outfile   = cmdopts.outfile
+	p_to_tab  = cmdopts.ptotab
+	stripnbsp = cmdopts.stripnbsp
+
+	#
+	# Read whole file in all at once
+	#
+	print "Reading", infile+"..."
+	f    = open(infile, 'rb')
+	data = f.read()
+	f.close()
+
+	g    = open(outfile, 'wb')
+
+#	data,punt,enc = text_to_unicode(data)
+
+	line = data
+	if cmdopts.chapterize :
+		print "Converting <a NAME=\"\"></a> tags..."
+		line = eat_a_replace_chapter(line)
+	#endif
+	print "Converting known <span> tags..."
+	line = eat_spans_replace_format(line)
+	print "Stripping Unknown HTML..."
+	line = eat_unknown_tags_yum(line)
+	print "Convert starbreaks..."
+	line = eat_stars_replace_break(line)
+	if p_to_tab :
+		print "Converting <p> tags to [tab] characters..."
+		line = eat_p_replace_tab(line)
+	#endif
+	if stripnbsp :
+		print "Converting &nbsp; tags to [space] characters..."
+		line = eat_nbsp_replace_space(line)
+	#endif
+
+	print "Writing", outfile+"..."
+	g.write(line)
+	g.close()
+
+	print "Done."
+
+# enddef test()
+
+if __name__ == "__main__":
+	striphtml()

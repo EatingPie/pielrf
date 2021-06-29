@@ -1,0 +1,969 @@
+#!/usr/bin/env python
+"""
+	Program: pielrf
+
+	Author: EatingPie <pie@storybytes.com>
+
+    Creates a Sony Reader/Librie lrf file from a text file.
+	Includes easy table of contents, header, chapterization and curly quotes.
+
+	Features included:
+
+		* Curly (typographic) quotes.
+		* Header at top of each page ala Sony Style E-Books
+		* Table of Contents and Chapterization if you use the <chapter> tag.
+		* Paragraph auto-flow.
+		* Understands HTML tags <i></i>, <b></b> <center></center>,
+		  <sub></sub>, <sup></sup>, <p></p>.
+		* Understands ALL HTML Ampersand tags - &amp;, &pound, &uumlat, etc.
+		* Paragraphs can be delimited by tabs, spaces, vertical whitespace.
+		* Font size / weight (bold) can be controlled from command line.
+		* Unicode input supported.
+		* Ability to control almost everything else from the command line too!
+
+	VERSION HISTORY
+
+		2.1.4 - Screen Width default changed to 560 to fix right margin
+				shift on size change (S to M, etc.).  This had NO EFFECT
+				on the position of the default margins -- they're still
+				exactly the same width -- but they now remain the same
+				regardless of font size choice.
+ 
+		2.1.3 - --use-html is now the default.
+				--baselineskip=120 is now the default
+				--nochapterbreaks does NOT put a pagebreak between chapters
+				Added missing HTML tags.
+
+		2.1.2 - Convert <span class="italic"></span> to <i></i>
+				Removed stripping of empty <p> tags, since it doesn't
+				matter anyway, as empty paragraphs are ignored.
+				Moved --strip-html to the ChapterBook itself, and
+				call a ChapterBook.preprocess_data() function.
+
+		2.1.1 - Added parskip setting
+				Any "* * *" on its own line is converted to a section break
+				Books without <chapter> tags now render without a TOC
+				Convert <h1 class=""> to <h1>
+
+		2.1.0 - Added .pielrfrc support to save settings
+				Added <verse> and <justified> for verse and
+				justified (no parindent) quotes.
+				Increased <blockquote> level to 3
+				Fixed stripping of empty <p> tags with --strip-html
+				Fixed --html-quotes and --preserve-spaces
+
+		2.0.3 - Added <blockquote> indented text support
+
+		2.0.2 - Option to strip unknown HTML with "--strip-html"
+
+		2.0.1 - Bug fix and regex update.
+
+		2.0   - Use new pielrf python library.
+			  - Support for Unicode thanks to Lee Bigelow
+			  - Added HTML ampersand support in Title
+			  - Added 'textchapter' for headerstyle, which uses specified
+			    text on cmdline plus the chapter name
+
+		1.7.1 - Bounds Error in curly-single-quote fixed (thanks to Lee)
+
+		1.6   - Fixed DOS linebreak issue
+			  - Added --bold to make whole book bold
+			  - Added <toctext> flag for Table of Content non-button text
+			    Will go in TOC Page only, NOT the Reader TOC Menu
+
+		1.5   - First Official Release
+			  - Installation now includes required packages.
+			  - Installer installs required packages automatically
+			    if possible (MacOSX/UNIX/Linux).
+
+		1.2 - ADDED HEADER AT TOP OF EACH PAGE!
+			- Added "--headerstyle" to set how to determine the header.
+				'title':        (default) use the the book title
+				'chapter':      use name of each chapter
+				'titlechapter': combine book title and chapter name
+				'none':         use no header at all
+			- Added "--headertext" to force header to specified text
+			  When using this option, "--headerstyle" setting is ignored.
+			- Added "--chapterfontsize" and "--chapterfontweight" options to
+			  correctly identify options related to <chapter> Tagged font
+			  controls.  These were originally called "headers", so the
+			  problem is pretty obvious there.
+			- Options "--headerfontsize" and "--headerfontweight" now refer to
+			  top-of-page headers.
+			- Added "--headerheight" to set header height
+			- Updated page and margin defaults to fit a header
+			- Correctly generate Author and Title Sort Options, ie remove
+			  "The" and "A" from beginning of title, sort by last name
+			  first for Author.
+			- Now uses default python interpreter, which is more likely
+			  to be the "right one."
+
+		1.1 - Added <h1> type tags and --without-toc flag
+
+		1.0 - Initial Release, Public Beta
+
+	NEEDED FEATURES
+
+		Images, plus button to jump to image.
+
+	LICENSE
+
+		Okay, here's the deal.  Just like every other license out there,
+		this software's provided as-is.  You use this and anything bad that
+		happens, you can't hold me responsible!  You are a risk taker, after
+		all!  However, I will, accept checks, money orders, paypal, and any
+		other form of payment for anything GOOD that happens.
+
+		So here are the rules.
+
+		(1) Feel free to share this code.  Hey, that's what it's all about!
+
+		(2) Feel free to change this code, but ONLY IF YOU MAKE IT BETTER!
+		    Making the code worse is totally, 100% against this license
+			agreement.  Otherwise I will hunt you down and ... ask you to
+			fix your bugs!  Got it?
+
+		(3) Credit where credit is due.  Make sure my name/e-mail appears,
+			as well as those of others who have added to this code and
+			have provided such info.
+
+		(4) You cannot hold me, or any other contributor to this code,
+			liable for anything that goes wrong.  Your government falls?
+			Sorry.  Your boy/girlfriend leaves you?  Bummer.  Your cat
+			dies?  Um... I'm allergic.  Anything else tanks as a
+			result of this software, you take full responsibility.
+			(It probably won't, though, I haven't destroyed any governments,
+			cats or relationships with it yet, and I use it all the time.)
+
+"""
+
+from pylrs.pylrs			import *
+from pielrf.chapterbook		import *
+from pielrf.textconvert		import *
+from pielrf.cmdline			import *
+
+from sys					import *
+from optparse				import OptionParser
+
+#
+# Verson Number
+#
+VERSION = "2.1.4"
+
+#
+# Globals - Set by Command Line Options
+#
+verbose = True
+
+
+#############################################################
+#############################################################
+
+
+#############################################################
+# class PielrfOptions():									#
+#															#
+#	Handle global command line options specifically for		#
+#	the pielrf program by extending the general				#
+#	ChapterBook options.									#
+#															#
+#############################################################
+class PielrfOptions(ChapterBookOptions):
+
+	#############################################################
+	# def add_options():										#
+	#############################################################
+	def add_options(self):
+
+		cmdline = self.cmdline
+
+		#
+		# Verbosity Off
+		#
+		cmdline.add_option("-q",  "--quiet", dest="verbose",
+						   default=True,
+						   action="store_false",
+						   help="Turn of all textual output (quiet mode)"),
+		cmdline.add_option("-v", "--version", dest="version",
+						   default=False,
+						   action="store_true",
+						   help="Print version number")
+		cmdline.add_option("--writerc", "--write-rc", "--write-prefs",
+						   dest="writerc",
+						   default=False,
+						   action="store_true",
+						   help="Save current settings in .pielrfrc")
+
+		#
+		# Input / Output Files
+		#
+		cmdline.add_option("-i", "--infile", dest="infile",
+						   action="store",   type="string",
+						   help="Input text file to convert to lrf")
+		cmdline.add_option("-o", "--outfile", dest="outfile",
+						   action="store",    type="string",
+						   help="Output lrf file for converted text")
+		#
+		# Generate Table of Contents?
+		#
+		cmdline.add_option("--without-toc", dest="do_reader_toc",
+						   default=True,
+						   action="store_false",
+						   help="Do not generate Reader Table of Contents. "
+						        "For books with lots of chapters, the Table "
+						   		"of Contents makes the Reader VERY SLOW!")
+
+		#
+		# How to do a Header
+		#
+		cmdline.add_option("--headerstyle", dest="headerstyle",
+						   default="title",
+						   metavar="title|chapter|titlechapter|textchapter|"
+									"tc|none",
+						   help="Specify how page Header is created: "
+						        "'title' (default) - Use Book Title. "
+						        "'chapter' - Use each Chapter Name. "
+						        "'titlechapter' - "
+						        "Use Book Title and Chapter Name together. "
+						        "'textchapter' - "
+						        "Provided text and Chapter Name together. "
+						        "'tc' - same as 'titlechapter.' "
+						        "'none' - No page Header."
+						   )
+		cmdline.add_option("--headertext", dest="headertext",
+						   default=None,
+						   metavar="TEXT",
+						   help="Use provided TEXT for Page Header. WARNING: "
+						        "This option causes '--headerstyle' "
+						   		"to be Ignored."
+						   )
+
+		#
+		# How to calculate linebreaks
+		#
+		cmdline.add_option("-b", "--paragraphbreak", dest="linebreak",
+						   default="auto", metavar="auto|cr|tab|space|html",
+						   help="Specify how to break paragraphs: "
+						        "'auto' (default) - best-guess algorithm. "
+						        "'html' - paragraphs begin with HTML <p> tag. "
+						        "'cr' - paragraphs begin after line break. "
+						        "'tab' - paragraphs begin with tab-indented "
+								"line. "
+						        "'space' - paragraphs begin with multi-spaced "
+						        " indented line."
+						   )
+
+		cmdline.add_option("--bold", dest="all_bold",
+						   default=False,
+						   action="store_true",
+						   help="Make the whole book boldface")
+
+		cmdline.add_option("--encoding", dest="encoding",
+						   default=None,
+						   metavar="ascii|utf_8|latin_1|cp1252|iso8859_15",
+						   help="Use provided unicode-type as encoding"
+						   )
+
+		cmdline.add_option("--nochapterbreaks", "--nobreaks",
+						   dest="chapterbreak",
+						   default=True,
+						   action="store_false",
+						   help="Do not put a page-break between chapters.")
+
+		#
+		# Add the rest of the options
+		#
+		ChapterBookOptions.add_options(self)
+
+	#enddef add_options
+
+	#############################################################
+	# def set_option_default():									#
+	#############################################################
+	def set_option_default(self, name, value):
+
+		cmdline = self.cmdline
+
+		#
+		# Try our defalts first
+		#
+
+		#
+		# STRINGS
+		#
+		if name == "encoding":
+			cmdline.set_defaults(encoding=value)
+		elif name == "headerstyle":
+			cmdline.set_defaults(headerstyle=value)
+		#
+		# BOOLEAN VALUES
+		#
+		elif name == "quiet":
+			value = self.optstr_to_boolean(value)
+			if value == None:
+				return
+			elif value == True:
+				cmdline.set_defaults(verbose=False)
+			else:
+				cmdline.set_defaults(verbose=True)
+		elif name == "without-toc":
+			value = self.optstr_to_boolean(value)
+			if value == None:
+				return
+			elif value == True:
+				cmdline.set_defaults(do_reader_toc=False)
+			else:
+				cmdline.set_defaults(do_reader_toc=True)
+		elif name == "bold":
+			value = self.optstr_to_boolean(value)
+			if value == None:
+				return
+			cmdline.set_defaults(all_bold=value)
+		#endif
+
+		#
+		# Now try the parent class
+		#
+		ChapterBookOptions.set_option_default(self, name, value)
+
+	#enddef set_option_default
+
+
+	#############################################################
+	# def get_option_defaults():								#
+	#############################################################
+	def get_option_defaults(self) :
+
+		op = self.options
+
+		#
+		# A few options are the OPPOSITE boolean value of their name
+		#
+		if not op.verbose:
+			not_verbose = True
+		else:
+			not_verbose = False
+		if not op.do_reader_toc:
+			not_do_reader_toc = True
+		else:
+			not_do_reader_toc = False
+
+		line  = "#\n"
+		line += "# .pielrfrc\n"
+		line += "#\n"
+		line += "# Settings for pielrf - text to lrf"
+		line +=  " (Sony Reader/Librie format) converter\n"
+		line += "#\n"
+
+		line += "quiet = "          +self.boolean_to_optstr(not_verbose)
+		line += "\n"
+		line += "without-toc = "    +self.boolean_to_optstr(not_do_reader_toc)
+		line += "\n"
+		line += "bold = "           +self.boolean_to_optstr(op.all_bold)
+		line += "\n"
+		if op.encoding != None :
+			line += "encoding = "   +op.encoding
+			line += "\n"
+		#endif
+		if op.headerstyle != "provided" :
+			line += "headerstyle = "+op.headerstyle
+			line += "\n"
+		#endif
+
+		lines = line + ChapterBookOptions.get_option_defaults(self)
+
+		return lines
+
+	#enddef get_option_defaults
+
+
+	#############################################################
+	# def parse_args():											#
+	#															#
+	#############################################################
+	def parse_args(self):
+
+		cmdline = self.cmdline
+
+		(self.options, self.args) = cmdline.parse_args()
+
+		options = self.options
+
+		#
+		# Arg Checking is handled here.
+		# Any Global Variables are set in Main Program
+		#
+		infile  = options.infile
+		outfile = options.outfile
+		linebrk = options.linebreak
+		hstyle  = options.headerstyle
+
+		if options.version :
+			cmdline.print_help()
+			print "pielrf version: ", VERSION
+			return False
+		#endif
+
+		if not infile :
+			cmdline.print_help()
+			print "No Input File Specified"
+			return False
+		#endif
+		if not outfile :
+			cmdline.print_help()
+			print "No Output File Specified"
+			return False
+		#endif
+
+		if linebrk != "auto" and linebrk != "cr" and linebrk != "html" and \
+		   linebrk != "tab"  and linebrk != "space" :
+			cmdline.print_help()
+			print "Incorrect line break option specified: -b ", linebrk
+			return False
+		#endif
+
+		if hstyle != "title" and hstyle != "chapter" and \
+		   hstyle != "titlechapter" and  hstyle != "textchapter" and \
+		   hstyle != "tc" and hstyle != "none" :
+			cmdline.print_help()
+			print "Incorrect Header Style option: --headerstyle", hstyle
+			return False
+		#endif
+
+		encoding_failed = False
+		if options.encoding != None :
+			try:
+				x = unicode("test", options.encoding)
+			except LookupError:
+				encoding_failed = True
+			#endtry
+		#endif
+
+		if encoding_failed :
+			cmdline.print_help()
+			print "Invalid encoding \"%s\" specified." % options.encoding
+			return False
+		#endif
+
+		if not os.path.exists(infile) :
+			cmdline.print_help()
+			print "Input File \"", infile, "\" does not exist"
+			return False
+		#endif
+
+		if infile == outfile :
+			cmdline.print_help()
+			print "Input and Output files were the same: \""+infile+"\""
+			return False
+		#endif
+
+		#
+		# If headertext provided, headerstyle is ignored
+		# And coalesce options so tc refers to titlechapter
+		# Ugh. The logic here sucks...
+		#
+		if options.headertext :
+			if options.headerstyle == "tc" :
+				options.headerstyle = "textchapter"
+			if options.headerstyle != "textchapter" :
+				options.headerstyle = "provided"
+		elif options.headerstyle == "tc" :
+			options.headerstyle = "titlechapter"
+		elif options.headerstyle == "textchapter" :
+			cmdline.print_help()
+			print "Must specify a --headertext option when using", \
+				  "--headerstyle=textchapter"
+			return False
+		#endif
+
+		#
+		# if the user wants the book all bold,
+		# set all fontweights to 800
+		#
+		if options.all_bold :
+			options.textweight    = 800
+			options.headerweight  = 800
+			options.chapterweight = 800
+		#endif
+
+		return True
+
+	# enddef parse_args()
+
+# enddef PielrfOptions()
+
+
+#############################################################
+#############################################################
+
+
+#############################################################
+# def parse_cmdline():										#
+#															#
+#		Create, parse, and print the command line.			#
+#															#
+#############################################################
+def parse_cmdline():
+
+	cmdline = PielrfOptions(usage="usage: %prog -i infile -o outfile "
+							"[-t Title -a Author ...] "
+							"(-h for all options)",
+							rcfile=".pielrfrc"
+							)
+
+	#
+	# Fill in the required options for ChapterBook Instantiation.
+	#
+	cmdline.add_options()
+	cmdline.read_config_file()
+	if not cmdline.parse_args() :
+		return None
+
+	options = cmdline.options
+
+	#
+	# If we aren't doing chapter breaks, we cannot have chapter
+	# based headers, sorry!  Either book title or headertext
+	#
+	if not options.chapterbreak :
+		if options.headertext != None :
+			cmdline.options.headerstyle = "provided"
+		elif options.headerstyle != "none" :
+			cmdline.options.headerstyle = "title"
+		#endif
+	#endif
+
+	#
+	# Return now if we are not using verbose mode
+	# Everything is okay here, so returning true
+	#
+	if not options.verbose :
+		return cmdline
+
+	#
+	# Verbose statement of argument values
+	#
+	print "Infile:  ", options.infile
+	print "Outfile: ", options.outfile
+	print "Title:   ", options.title
+	print "Author:  ", options.author
+	print "Category:", options.category
+	print "ISBN:    ", options.isbn
+	print "BookID:  ", options.bookid
+
+	print "Options:"
+	print "\tViewable Area:", \
+		  options.textheight, "x", options.textwidth, \
+		  "- [", options.topmargin, ", ", options.sidemargin, "] with", \
+		  options.headerheight, "header height"
+	print "\tText Font:    ", \
+		  options.textsize, "(pixels) +", options.textweight, "(strength)"
+	print "\tHeader Font:  ", \
+		  options.headersize, "(pixels) +", options.headerweight, "(strength)"
+	print "\tChapter Font: ", \
+		  options.chaptersize, "(pixels) +",options.chapterweight,"(strength)"
+	print "\tParagraphs:   ", \
+		  options.parindent, "(points Indent) +", \
+		  options.baselineskip, "(points Baseline)"
+	if options.parskip > 0 :
+		print "\t\t     +", options.parskip,   "(points Spacing)"
+	if options.no_chapterspace :
+		print "\tPushing Chapter Headings to top of margin"
+	if options.no_starbreak :
+		print "\tNot processing \"* * *\" characters into section breaks."
+	print "\tIndent Level: ", \
+		   options.quoteoffset, "(pixels Indent)"
+	print "\tVerse Indent: ", \
+		   options.verseparindent, "(pixels)"
+
+	if options.headertext :
+		print "\tHeader Text:  ", options.headertext
+	if options.headerstyle != "none" :
+		print "\tUsing", options.headerstyle, "to generate Header"
+	elif not options.headertext :
+		print "\tNot generating a Header"
+
+	if options.do_reader_toc :
+		print "\tGenerating Reader Main Table of Contents"
+	else :
+		print "\tNo Reader Table of Contents will be created"
+	if options.chapterbreak :
+		print "\tUsing a page break between Chapters"
+	else :
+		print "\tNo break between Chapters"
+
+	linebreak = options.linebreak
+	if linebreak == "auto" :
+		print "\tParagraph Breaks determined automatically"
+	else :
+		print "\tParagraph Breaks determined by indentation with ", linebreak
+	if options.html_quotes:
+		print "\tUsing explicit HTML curly-quotes (&rdquo;|&ldquo;)"
+	else :
+		print "\tUsing algorithm for explicit curly-quotes"
+
+	if options.preserve_spaces :
+		print "\tPreserving extra spaces"
+	else :
+		print "\tEliminating extra spaces"
+
+	if options.preserve_paragraphs :
+		print "\tPreserving empty paragraphs"
+	else :
+		print "\tEliminating empty paragraphs"
+
+	if options.encoding == None :
+		print "\tDetermining encoding automatically."
+	else :
+		print "\tTrying", options.encoding, "for encoding"
+
+	if options.strip_html :
+		print "\tStripping Unknown HTML Tags"
+
+	if options.writerc :
+		print "\tWriting settings in .pielrfrc"
+
+	return cmdline
+
+# enddef parse_cmdline()
+
+
+#############################################################
+#############################################################
+
+
+#############################################################
+# def pielrf():												#
+#															#
+#############################################################
+def pielrf():
+
+	global verbose
+
+	cmdline = parse_cmdline()
+	if not cmdline :
+		return
+
+	cmdopts = cmdline.options
+
+	# Locals
+	infile          = cmdopts.infile
+	outfile         = cmdopts.outfile
+	# How to break paragraphs
+	linebreak       = cmdopts.linebreak
+	chapterbreak    = cmdopts.chapterbreak
+	# Do we generate main Table of Conents or not
+	do_toc          = cmdopts.do_reader_toc
+	# Header Text/Style
+	headertext      = cmdopts.headertext
+	headerstyle     = cmdopts.headerstyle
+	# config
+	writerc         = cmdopts.writerc
+	# Globals
+	verbose         = cmdopts.verbose
+	preserve_prgrph = cmdopts.preserve_paragraphs
+
+	#
+	# Read whole file in all at once
+	#
+	f    = open(infile, 'rb')
+	data = f.read()
+	f.close()
+
+	#
+	# decode text to unicode object using guesser
+	#
+	if cmdopts.encoding == None :
+		data,punt,enc = text_to_unicode(data)
+	else :
+		data,punt,enc = text_to_unicode(data, cmdopts.encoding)
+
+	if verbose :
+		print "\tActual Input file encoding: %s" % enc
+		print
+	#endif
+
+	#
+	# Create the Book Itself (um... obvious?)
+	# and all subsequent chapters, headers, etc. are generated
+	# from the ChapterBook
+	# Initialize current chapter to nothing
+	#
+	book    = ChapterBook(cmdline)
+	chapter = None
+
+	#
+	# Preprocess the data, like stripping html and whatnot
+	#
+	data = book.preprocess_data(data, verbose)
+
+	#
+	# Create a PageStyle for every section, and add the header to that
+	#
+	headerTitle   = cmdopts.title
+	headerText    = cmdopts.title
+	if headerstyle == "none" :
+		headerTitle = None
+		headerText  = None
+	elif headerstyle == "provided" :
+		headerText = convert_header_text(headertext)
+	elif headerstyle == "textchapter" :
+		# Using text and chapter... so fake it as title chapter
+		headerTitle = convert_header_text(headertext)
+		headerText  = headerTitle
+		headerstyle = "titlechapter"
+	#endif
+
+	#
+	# Create Table Of contents Page.
+	# This should be filled with buttons
+	#
+	tocPage = None
+	if re.compile("<chapter>",re.I).search(data) != None :
+		tocPage    = book.TocPage(headerText)
+		tocPage.Heading(u"Table of Contents")
+
+		#
+		# Add TOC Page as first entry in TOC Menu,
+		# since it truly begins the book
+		#
+		book.addTocEntry(u"Table of Contents", tocPage.TargetBlock)
+		if verbose :
+			print "Creating Chapters..."
+	else :
+		if verbose :
+			print "No chapters found, not producing a table of contents"
+	#endif
+
+	#
+	# For each Chapter
+	# Dilineated by <chapter>
+	#
+	first        = True
+	chnum        = 1
+	parnum       = 0
+	html_re      = re.compile(u"<p.*?>", re.I|re.M)
+	html_replace = re.compile(u"</p>",   re.I|re.M)
+	chapters     = data.split(u"<chapter>")
+	for chapter_idx in range(len(chapters)) :
+		chapters[chapter_idx].strip().strip('\r\n').strip('\n')
+		if len(chapters[chapter_idx]) == 0 or chapters[chapter_idx].isspace():
+			continue
+
+		#
+		# Do not know how the paragraphs are delimited
+		# Pick the one which yeilds the greatest amount of
+		# total paragraphs in "auto" mode, otherwise use
+		# the mode specified
+		#
+		list_cr    = chapters[chapter_idx].split("\n\n")
+		list_dos   = chapters[chapter_idx].split("\r\n\r\n")
+		list_tab   = chapters[chapter_idx].split("\n\t")
+		list_spc   = chapters[chapter_idx].split("\n  ")
+		list_html  = html_re.split(chapters[chapter_idx])
+		list       = list_cr
+
+		if   linebreak == "cr" :
+			if len(list_cr) >= len(list_dos) :
+				list = list_cr
+			else :
+				list = list_dos
+		elif linebreak == "tab" :
+			list     = list_tab
+		elif linebreak == "space" :
+			list     = list_spc
+		elif linebreak == "html" :
+			list = list_html
+			for i in range(len(list)):
+				list[i] = html_replace.sub("", list[i])
+				list[i].rstrip().lstrip()
+		elif linebreak == "auto" :
+			list     = list_cr
+			if len(list_dos) > len(list):
+				list = list_dos
+			if len(list_tab) > len(list):
+				list = list_tab
+			if len(list_spc) > len(list):
+				list = list_spc
+			if len(list_html) > len(list) :
+				list = list_html
+				for i in range(len(list)):
+					list[i] = html_replace.sub("", list[i])
+					list[i].strip()
+		#endif
+
+		#
+		# If this is an empty chapter (all paragraphs are
+		# whitespace), skip it
+		#
+		skip_section = True
+		for i in range(len(list)):
+			list[i].strip().strip('\r\n').strip('\n')
+			if len(list[i]) > 0 and not list[i].isspace() :
+				skip_section = False
+				break
+			#endif
+		#endfor
+		if skip_section and not preserve_prgrph:
+			continue
+
+		#
+		# The very first element is the name of the chapter, since
+		# it had the <chapter> tag before it
+		#
+		if verbose :
+			print "Chapter ", chnum, " has ", len(list), " paragraphs"
+			chnum += 1
+		#endif
+
+		#
+		# We need to re-generate myheader EVERY TIME it goes into a pagestyle.
+		# headerText is already created with proper values for most cases.
+		# Only two cases that change them..
+		#
+		myheader = None
+		if headerstyle != "none" :
+			myheader      = headerText
+			# If using chapter name in header, only use first line of name
+			splitHeader   = list[0].split('\n')
+			headerChapter = convert_header_text(splitHeader[0])
+			if headerstyle == "titlechapter" :
+				if headerTitle == headerChapter :
+					myheader = headerTitle
+				else :
+					myheader = headerTitle+convert_misc(" -- ")+headerChapter
+			elif headerstyle == "chapter" :
+				myheader = headerChapter
+			#endif
+		#endif
+
+		#
+		# Create the attributes for the page.
+		# A chapter header, a separator, text for the chapter
+		# Add a TOC entry to jump to the beginning of the new page
+		#
+		# Create a new chapter ONLY if we are using chapter breaks.
+		# Otherwise we keep re-using the same chapter....
+		# A book without chapter breaks is basically a book with one chapter!
+		#
+		if (not chapter) or (chapterbreak):
+			chapter    = book.Chapter(myheader)
+		else :
+			# Need a new header for non-breaking chapter
+			chapter.NewTargetHeading()
+		#endif
+
+		#
+		# TargetBlock is updated dynamically
+		#
+		buttonText = convert_button_text(list[0])
+		if tocPage != None:
+			tocPage.TocEntry(buttonText, chapter.TargetBlock)
+
+		#
+		# Look for <toctext> tag
+		# this is boldfaced text placed in the TOC, with no button
+		# Must be done with a while loop because listlen
+		# will change if we find a <toctext> tag
+		# Blank <toctext> followed by no text generates a blank line
+		#
+		if tocPage != None :
+			i       = 0
+			listlen = len(list)
+			while i < listlen :
+				curline = list[i].lstrip().rstrip()
+				if curline.find("<toctext>", 0, 9) >= 0 :
+					toclines = curline.split("<toctext>")
+					for j in range(1,len(toclines)) :
+						tocline = toclines[j].lstrip().rstrip()
+						if len(tocline) <= 0 :
+							tocPage.TocEntry()
+							continue
+						#endif
+						tocline = convert_button_text(tocline)
+						tocPage.TocEntry(Bold(tocline))
+					#endfor
+					del list[i]
+					listlen = len(list)
+					# don't increment i -- del shifts next element to cur
+					continue
+				#endif
+				i += 1
+			#endfor
+		#endif
+
+		#
+		# Add TOC Entries
+		# ALWAYS add he Begin Reading TOC Entry
+		#
+		if first :
+			book.addTocEntry("Begin Reading", chapter.TargetBlock)
+			first = False
+		#endif
+
+		#
+		# Add main TOC or not?
+		#
+		if do_toc :
+			book.addTocEntry(buttonText, chapter.TargetBlock)
+
+		#
+		# Now Parse Each Paragraph in the Chapter
+		# The first Paragraph is the Chapter heading.
+		#
+		for i in range(len(list)):
+			parnum  += 1
+			newstr   = convert_curly_quotes(list[i].lstrip())
+			newstr   = convert_misc(newstr)
+			newstr   = convert_html_ampersands(newstr)
+			newstr   = newstr.rstrip().rstrip("\n")
+			finalstr = newstr
+
+			if (i == 0) and (tocPage != None):
+				#
+				# First line is Chapter Header, unless
+				# no tocPage (meaning we aren't doing chapters)
+				#
+				chapter.Heading(finalstr)
+			else :
+				chapter.Body(finalstr)
+			#endif
+		# endfor - Each Paragraph
+
+	#endfor - Each Chapter
+
+	if verbose :
+		if enc == "ascii" :
+			print "Generating LRF..."
+		else :
+			print "Generating LRF from %s..." % enc
+
+	# generate the lrf file
+	book.renderLrf(outfile)
+
+	if punt:
+		print "Input contained unknow unicode characers which were dropped."
+		print "Please verify the output LRF."
+	#endif
+
+	#
+	# Save the configuration if asked
+	#
+	if writerc :
+		if verbose :
+			print "Writing configuration data to .pielrfrc ..."
+		#endif
+		cmdline.write_config_file()
+	#endif
+
+	if verbose :
+		print "Done."
+
+# enddef pielrf()
+
+
+#
+# Is this the wackiest thing you've ever seen in a language, or what?
+#
+if __name__ == "__main__":
+	pielrf()

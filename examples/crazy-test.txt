@@ -1,0 +1,34 @@
+<chapter> Crazy Formatting Stress Test
+    When <the office door <i>opened suddenly</i> I  knew  the  game  was  up.  It  had
+been <b>a money-maker -- but it was all over. As the cop</b> walked in  I  sat  back  in
+the chair and put on a happy grin. He  had  the  same  <i>somber  expression  and</i>
+heavy foot that they all have -- and the same lack of humor.  I  almost  knew  tothe <sup>word</SUP> what he was going to say before he uttered a syllable.<br>
+    This is a verse offset by one Vertical Space
+    This is another verse
+<center>
+    Centered between 2<sup>1</sUP> Vert Spaces
+</center>
+    One VS ABove for "James Bolivar diGriz--"</i>
+<center>"James <I>diGriz</I><b>centered</b>!!!!!"</center>
+I<sUb>10000</sub> was waiting for the word charge, I <i>thought it made  a  nice</i>  touch  that
+way.
+
+<center>
+<H1>
+He is James Bolivar diHeader1!
+</H1>
+</center>
+
+As he said it I pressed the button that  set  off  the  charge  of  black
+powder  in  <i>the  ceiling,  the  crossbeam  buckled  and  the  three  ton  safe
+dropped through right  on  the  top  of  the  cop's  head.  He  squashed  very
+nicely, thank you. The cloud of plaster dust  settled  and  all  I  could  see
+of him was one hand, slightly crumpled.  It  (witched  a  bit  and  the  index
+finger pointed at roe accusingly. His  voice  was  a  little  muffled  by  the
+safe <i>and sounded a bit annoyed. In fact he repeated himself a bit.
+    Way. As he said it I pressed the button</i> that  set  off  the  charge  of  black
+powder  in  <sup>the  ceiling,  the  crossbeam  buckled  and  the  three  ton  safe
+
+<center>
+The</sup> End
+</center>

@@ -1,0 +1,26 @@
+<chapter>Title Page by EatingPie
+
+<chapter>Preface
+
+	In this example, I only use the &lt;chapter&gt; tag, and each paragraph begins with a tab.  That's it.
+	This is to illustrate how easy it is to use the program.
+	Um... except... this example was so short, I had to force paragraph break-on-tabs with the "-b tab" option. (The auto detect alogrithm chooses carriage-returns because it sees more of those than tabs.)
+	"pielrf -i basic-test.txt -o basic-test.lrf -b tab"
+
+<chapter> Book One
+
+	I really didn't want to learn Python.  I figured C, C++, Fortran, Perl, LISP, BASIC -- yes, BASIC -- Prolog, SIMSCRIPT, Simula, Lex, YACC, bash, csh, sh, and whatever else I've forgotten, was enough!
+	I mean, "enough is enough" as they say.
+
+<chapter>Book Two
+
+	Well, crud, 'makelrf3' didn't do what I wanted, and I sure as heck wasn't going to implement everything in C.  So back to square one... aka... Python!
+
+<chapter>Book Three
+
+	This book is already too long.  Let's just say I learned Python in a couple of days, and wrote a program to do everything I wanted...
+	The End
+
+<chapter>Copyright
+
+	Copyright &copy; 2007, EatingPie.  All Rights Reserved.  Don't copy me, even if I don't know any lawyers (kidding, kidding, I know tons of lawyers).

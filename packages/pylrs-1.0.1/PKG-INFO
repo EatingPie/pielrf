@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: pylrs
+Version: 1.0.0
+Summary: A package to create eBooks for the Sony PRS-500
+Home-page: http://www.falstaffshouse.com
+Author: Falstaff (Mike Higgins)
+Author-email: falstaff@falstaffshouse.com
+License: Free for any use.
+Description: UNKNOWN
+Platform: Any Python 2.4+
